@@ -18,12 +18,46 @@ plotDir <- NULL
 dir.create(tableDir)
 dir.create(plotDir)
 
-# Read the networks. These are exclusive.
-skeletal_muscle <- read.csv(paste0(unagiDir, "skeletal_muscle_only_updated.csv"), row.names = 1)
-subcutaneous_adipose <- read.csv(paste0(unagiDir, "subcutaneous_adipose_only_updated.csv"), row.names = 1)
-skin <- read.csv(paste0(unagiDir, "skin_only_updated.csv"), row.names = 1)
-lung <- read.csv(paste0(unagiDir, "lung_only_updated.csv"), row.names = 1)
-aorta <- read.csv(paste0(unagiDir, "aorta_only_updated.csv"), row.names = 1)
+# Read the networks.
+skeletal_muscle <- read.csv(paste0(unagiDir, "skeletal_muscle.csv"), row.names = 1)
+subcutaneous_adipose <- read.csv(paste0(unagiDir, "subcutaneous_adipose.csv"), row.names = 1)
+skin <- read.csv(paste0(unagiDir, "skin.csv"), row.names = 1)
+lung <- read.csv(paste0(unagiDir, "lung.csv"), row.names = 1)
+aorta <- read.csv(paste0(unagiDir, "aorta.csv"), row.names = 1)
+
+# Get the exclusive networks.
+skeletal_muscle <- skeletal_muscle[setdiff(rownames(skeletal_muscle), 
+                                                c(rownames(subcutaneous_adipose),
+                                                  rownames(skin), rownames(lung),
+                                                  rownames(aorta))),]
+write.csv(skeletal_muscle, paste0(unagiDir, "/skeletal_muscle_only_updated.csv"))
+
+subcutaneous_adipose <- subcutaneous_adipose[setdiff(rownames(subcutaneous_adipose), 
+                                                          c(rownames(skeletal_muscle),
+                                                            rownames(skin), rownames(lung),
+                                                            rownames(aorta))),]
+write.csv(subcutaneous_adipose, paste0(unagiDir, "/subcutaneous_adipose_only_updated.csv"))
+
+skin <- skin[setdiff(rownames(skin), 
+                          c(rownames(skeletal_muscle),
+                            rownames(subcutaneous_adipose),
+                            rownames(lung), rownames(aorta))),]
+write.csv(skin, paste0(unagiDir, "/skin_only_updated.csv"))
+
+
+lung <- lung[setdiff(rownames(lung), 
+                          c(rownames(skeletal_muscle),
+                            rownames(subcutaneous_adipose),
+                            rownames(skin), rownames(aorta))),]
+write.csv(lung, paste0(unagiDir, "/lung_only_updated.csv"))
+
+
+aorta <- aorta[setdiff(rownames(aorta), 
+                            c(rownames(skeletal_muscle),
+                              rownames(subcutaneous_adipose),
+                              rownames(skin), rownames(lung))),]
+write.csv(aorta, paste0(outdir, "/aorta_only_updated.csv"))
+
 
 # Label outlying genes.
 muscle_dev_genes <- c("MB", "MYH2", "MYL2", "DES", "TNNC1", "TNNC2", "ENO3", "MYL3",
