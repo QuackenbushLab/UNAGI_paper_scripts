@@ -17,7 +17,7 @@ Run `GenerateCoexpression.R`, changing the following variables in the script pri
    - `coexpressionDir`: Directory where you wish to store coexpression data
 
 ## Run UNAGI on Co-Expression Networks
-Run `RunUNAGI.R`, changing the following variables in the script prior to running. This script generates Supplementary Tables 1-5 as well as filtered coexpression data.
+Run `UNAGI_VALIDATION.R`, changing the following variables in the script prior to running. This script generates Supplementary Tables 1-5 as well as filtered coexpression data.
    - `coexpressionDir`: Directory where coexpression data are stored
    - `filteredCoexpressionDir`: Directory where you wish to store the filtered coexpression
    - `unagiDir`: Directory where you wish to store UNAGI results
