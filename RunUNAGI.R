@@ -1,30 +1,11 @@
-library(netZooR)
-
 # Setup
 options(stringsAsFactors = FALSE)
-if(!require("Matrix")){
-  install.packages("Matrix")
-}
-if(!require("data.table")){
-  install.packages("data.table")
-}
-if(!require("biomaRt")){
-  BiocManager::install("biomaRt")
-}
-if(!require("igraph")){
-  BiocManager::install("igraph")
-}
+
 library(Matrix)
 library(igraph)
 library(biomaRt)
 library(data.table)  # for faster I/O
-
-# Directories
-coexpressionDir <- NULL
-filteredCoexpressionDir <- NULL
-unagiDir <- NULL
-dir.create(filteredCoexpressionDir)
-dir.create(unagiDir)
+library(netZooR)
 
 # Parameters
 FAST_MODE <- TRUE
@@ -40,6 +21,13 @@ if (FAST_MODE) {
   UNAGI_CAP <- 5e5
   BLOCK_SZ <- 1000
 }
+
+# Directories
+coexpressionDir <- NULL
+filteredCoexpressionDir <- NULL
+unagiDir <- NULL
+dir.create(filteredCoexpressionDir)
+dir.create(unagiDir)
 
 # Load sparse matrices
 Skin_matrix     <- readRDS(paste0(coexpressionDir, "/skin_S.RDS"))
@@ -164,7 +152,7 @@ read_top_n_from_csv <- function(path, n) {
 }
 
 # Main runner
-build_and_run_unagi_from_matrix <- function(mat, goi_map, out_unagi_csv,
+build_and_run_unagi_from_matrix <- function(mat, goi_map, out_filtered_csv, out_unagi_csv,
                                             tail_frac = 0.05, block_size = 1000, col_sample_frac = 1.0,
                                             unagi_max_edges = 5e5, filtered_tmp_csv = tempfile(fileext = ".csv")) {
   message("\n===== START: ", out_unagi_csv, " =====")
@@ -184,18 +172,13 @@ build_and_run_unagi_from_matrix <- function(mat, goi_map, out_unagi_csv,
   message("  → Edges kept: ", total_written)
   message("  → Filtering time: ", signif(difftime(Sys.time(), t2, units="secs"), 3), " sec")
   
-  if (total_written == 0L) {
-    fwrite(data.table(), out_unagi_csv)
-    return(data.frame())
-  }
-  
   #Run UNAGI
   message("Running UNAGI")
   net_df <- read_top_n_from_csv(filtered_tmp_csv, unagi_max_edges)
   goi_present <- intersect(goi_map$ids, unique(c(net_df$source, net_df$target)))
   
   if (length(goi_present) == 0L) {
-    fwrite(net_df, out_unagi_csv)
+    saveRDS(net_df, out_filtered_csv)
     return(net_df)
   }
   
@@ -216,15 +199,20 @@ build_and_run_unagi_from_matrix <- function(mat, goi_map, out_unagi_csv,
 }
 
 # Run all tissues
-subnetwork1 <- build_and_run_unagi_from_matrix(Skin_matrix,     goi1_map, "~/Desktop/skinGGR.csv",    
+subnetwork1 <- build_and_run_unagi_from_matrix(Skin_matrix,     goi1_map, paste0(filteredCoexpressionDir, "Skin_sm_S.RDS"),    
+                                               paste0(unagiDir, "skin.csv"),
                                                tail_frac = TAIL_FRAC, block_size = BLOCK_SZ, col_sample_frac = COL_SAMPLE_FRAC, unagi_max_edges = UNAGI_CAP)
-subnetwork2 <- build_and_run_unagi_from_matrix(Skeletal_matrix, goi1_map, "~/Desktop/SkeletalGGR.csv",
+subnetwork2 <- build_and_run_unagi_from_matrix(Skeletal_matrix, goi1_map, paste0(filteredCoexpressionDir, "Skeletal_Muscle_sm_S.RDS"),
+                                               paste0(unagiDir, "skeletal.csv"),
                                                tail_frac = TAIL_FRAC, block_size = BLOCK_SZ, col_sample_frac = COL_SAMPLE_FRAC, unagi_max_edges = UNAGI_CAP)
-subnetwork3 <- build_and_run_unagi_from_matrix(Adipose_matrix,  goi1_map, "~/Desktop/AdiposeGGR.csv",
+subnetwork3 <- build_and_run_unagi_from_matrix(Adipose_matrix,  goi1_map, paste0(filteredCoexpressionDir, "Adipose_Subcutaneous_sm_S.RDS"),
+                                               paste0(unagiDir, "subcutaneous.csv"),
                                                tail_frac = TAIL_FRAC, block_size = BLOCK_SZ, col_sample_frac = COL_SAMPLE_FRAC, unagi_max_edges = UNAGI_CAP)
-subnetwork4 <- build_and_run_unagi_from_matrix(Lung_matrix,     goi1_map, "~/Desktop/LungGGR.csv",     
+subnetwork4 <- build_and_run_unagi_from_matrix(Lung_matrix,     goi1_map, paste0(filteredCoexpressionDir, "Lung_sm_S.RDS"),     
+                                               paste0(unagiDir, "lung.csv"),
                                                tail_frac = TAIL_FRAC, block_size = BLOCK_SZ, col_sample_frac = COL_SAMPLE_FRAC, unagi_max_edges = UNAGI_CAP)
-subnetwork5 <- build_and_run_unagi_from_matrix(Artery_matrix,   goi1_map, "~/Desktop/ArteryGGR.csv",   
+subnetwork5 <- build_and_run_unagi_from_matrix(Artery_matrix,   goi1_map, paste0(filteredCoexpressionDir, "Artery_Aorta_sm_S.RDS"),
+                                               paste0(unagiDir, "aorta.csv"),
                                                tail_frac = TAIL_FRAC, block_size = BLOCK_SZ, col_sample_frac = COL_SAMPLE_FRAC, unagi_max_edges = UNAGI_CAP)
 
 # Summary function
