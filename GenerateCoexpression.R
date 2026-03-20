@@ -42,7 +42,7 @@ doCorAndSave <- function(ocData, outFileName){
   S <- threshold_sparse_cov_fast_mc(t(ocData), gene_names = rownames(ocData), parallel = TRUE)
   
   # Save result
-  saveRDS(S, paste0(coexpressionDir, "/", outFileName))
+  saveRDS(ocResult, paste0(coexpressionDir, "/", outFileName))
 }
 doCorAndSave(ocDataSkin, "skin_S.RDS")
 doCorAndSave(ocDataAdipose, "adipose_S.RDS")
